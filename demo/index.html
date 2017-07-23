@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>reLexer.js</title>
+    <link rel="stylesheet" href="./demo.css">
+    <script src="../src/relexer.js"></script>
+    <script src="./demo.js"></script>
+  </head>
+  <body>
+    <script>
+      demonstrate('false');
+      demonstrate('true');
+      demonstrate('82');
+      demonstrate('1.8');
+      demonstrate('19 + 82');
+      demonstrate('"Paul Engel"');
+      demonstrate('company.name');
+      demonstrate('company.name', {
+        company: {
+          name: 'Engel Inc.'
+        }
+      });
+      demonstrate('(bool) ? "Yes" : "No"');
+      demonstrate('bool ? "Yes" : "No"', {
+        bool: true
+      });
+    </script>
+  </body>
+</html>
