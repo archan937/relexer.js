@@ -11,7 +11,8 @@ if (typeof(reLexer) == 'undefined') {
 // *
 
 reLexer = function(rules, root) {
-  rules || (rules = {});
+
+  root || (root = Object.keys(rules).pop());
 
   var
     actions,
@@ -19,10 +20,6 @@ reLexer = function(rules, root) {
     env,
     busy,
     patterns,
-
-  defaultRoot = function() {
-    return Object.keys(rules).pop();
-  },
 
   matchPattern = function(pattern) {
     if (typeof(pattern) == 'string')
@@ -32,7 +29,7 @@ reLexer = function(rules, root) {
       match = expression.match(pattern);
 
     if (match && match.index == 0) {
-      expression = expression.substring(match[0].length);
+      expression = expression.slice(match[0].length);
       return match[0];
     }
   },
@@ -69,20 +66,21 @@ reLexer = function(rules, root) {
   },
 
   matchConjunction = function(array, lazy) {
-    array.__conjunction__ || (array.__conjunction__ = 'and');
+    array._conj_ || (array._conj_ = 'and');
 
     var
       initialExpression = expression,
-      conjunction = array.__conjunction__,
-      i, pattern, match, matches = [];
+      conjunction = array._conj_,
+      i, pattern, identifier, match, matches = [];
 
     for (i = 0; i < array.length; i++) {
       pattern = array[i];
+      identifier = expression + ' -> ' + pattern;
 
-      if (busy.indexOf(pattern) == -1) {
-        busy.push(pattern);
+      if (busy.indexOf(identifier) == -1) {
+        busy.push(identifier);
         match = matchExpression(pattern, null, lazy);
-        busy.splice(busy.indexOf(pattern), 1);
+        busy.splice(busy.indexOf(identifier), 1);
 
         if (match != undefined) {
           if (conjunction == 'and') {
@@ -103,9 +101,9 @@ reLexer = function(rules, root) {
 
   matchExpression = function(ruleOrPattern, name, lazy) {
     var
-      isRootMatch = arguments.length == 0,
       initialExpression = expression,
-      rule = ruleOrPattern || root || defaultRoot(),
+      isRootMatch = !ruleOrPattern,
+      rule = ruleOrPattern || root,
       pattern = rules[rule],
       action = actions && actions[rule],
       match,
@@ -144,7 +142,7 @@ reLexer = function(rules, root) {
 
       if (env && name) {
         match = [name, match];
-        match.__named__ = true;
+        match._named_ = true;
       }
 
       return match;
@@ -171,21 +169,30 @@ reLexer = function(rules, root) {
 
     specs.pattern = pattern;
 
-    if (pattern.__conjunction__)
-      specs.conjunction = pattern.__conjunction__;
+    if (pattern._conj_)
+      specs.conjunction = pattern._conj_;
 
     if (env && (match.constructor == Array)) {
       for (var i = 0; i < match.length; i++) {
         capture = match[i];
-        if (capture && capture.__named__) {
+        if (capture && capture._named_) {
           object[capture[0]] = capture[1];
         }
       }
     }
 
-    specs.captures = Object.keys(object).length ? object : match;
+    specs.captures = Object.keys(object).length ? newProxy(object) : match;
 
     return specs;
+  },
+
+  newProxy = function(captures) {
+    return new Proxy(captures, {
+      get: function(object, key) {
+        var value = object[key];
+        return (value && value.constructor == Function) ? value() : value;
+      }
+    });
   },
 
   scan = function() {
@@ -214,13 +221,6 @@ reLexer = function(rules, root) {
     }
   };
 
-  this.root = function(name) {
-    if (arguments.length)
-      root = name;
-    else
-      return root || defaultRoot();
-  };
-
   this.tokenize = function(expression) {
     return lex(expression);
   };
@@ -228,17 +228,18 @@ reLexer = function(rules, root) {
   this.parse = function(expression, actions, env) {
     return lex(expression, actions || {}, env || {});
   };
+
 };
 
 and = reLexer.and = function() {
-  var array = Array.prototype.slice.call(arguments);
-  array.__conjunction__ = 'and';
+  var array = [].slice.call(arguments);
+  array._conj_ = 'and';
   return array;
 };
 
 or = reLexer.or = function() {
-  var array = Array.prototype.slice.call(arguments);
-  array.__conjunction__ = 'or';
+  var array = [].slice.call(arguments);
+  array._conj_ = 'or';
   return array;
 };
 

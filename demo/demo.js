@@ -1,11 +1,14 @@
 var
   rules = {
     space: /\s+/,
-    boolean: /(true|false)/,
     path: /[a-zA-Z](\w+)\.?([\w+\.]*)/,
-    number: /-?\d+(\.\d+)?/,
     string: /(["'])(?:(?=(\\?))\2.)*?\1/,
+    number: /-?\d+(\.\d+)?/,
+    boolean: /(true|false)/,
     primitive: ':boolean|:number|:string|:path',
+    encapsulation: and(
+      '(', ':space?', ':expression>expression&', ':space?', ')'
+    ),
     ternary: [
       ':expression>statement',
       ':space?', '?', ':space?',
@@ -13,9 +16,6 @@ var
       ':space?', ':', ':space?',
       ':expression>false&'
     ],
-    encapsulation: and(
-      '(', ':space?', ':expression', ':space?', ')'
-    ),
     binaryExpression: [
       ':expression>left',
       ':space?',
@@ -31,16 +31,6 @@ var
     )
   },
   actions = {
-    boolean: function(env, bool) {
-      return bool == 'true';
-    },
-    number: function(env, number) {
-      var type = number.match(/\./) ? 'Float' : 'Int';
-      return Number['parse' + type](number);
-    },
-    string: function(env, string) {
-      return JSON.parse(string);
-    },
     path: function(env, path) {
       var properties = path.split('.'), i, value;
       for (i = 0; i < properties.length; i++) {
@@ -48,8 +38,21 @@ var
       }
       return value;
     },
+    string: function(env, string) {
+      return JSON.parse(string);
+    },
+    number: function(env, number) {
+      var type = number.match(/\./) ? 'Float' : 'Int';
+      return Number['parse' + type](number);
+    },
+    boolean: function(env, bool) {
+      return bool == 'true';
+    },
+    encapsulation: function(env, captures) {
+      return captures.expression;
+    },
     ternary: function(env, captures) {
-      return captures.statement ? captures.true() : captures.false();
+      return captures.statement ? captures.true : captures.false;
     },
     binaryExpression: function(env, captures) {
       var

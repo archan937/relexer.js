@@ -9,13 +9,13 @@
   </head>
   <body>
     <script>
-      demonstrate('');
-      demonstrate(' ');
       demonstrate('false');
       demonstrate('true');
       demonstrate(' 82 ');
       demonstrate('1.8');
       demonstrate('19 + 82');
+      demonstrate('(1 + 2) * 3');
+      demonstrate('1 + (2 * 3)');
       demonstrate('"Paul Engel"');
       demonstrate('company.name');
       demonstrate('company.name', {
@@ -24,6 +24,8 @@
         }
       });
       demonstrate('bool ? "Yes" : "No"');
+      demonstrate('(1 > -1) ? "Yes" : "No"');
+      demonstrate('(1 > 2) ? "Yes" : "No"');
       demonstrate('bool ? "Yes" : "No"', {
         bool: true
       });
