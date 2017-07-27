@@ -10,13 +10,13 @@ if (typeof(reLexer) == 'undefined') {
 // * $Date: {date} $
 // *
 
-reLexer = function(rules, root) {
+reLexer = function(rules, root, defaultActions) {
 
   root || (root = Object.keys(rules).pop());
 
   var
-    actions,
     expression,
+    actions,
     env,
     busy,
     patterns,
@@ -211,9 +211,10 @@ reLexer = function(rules, root) {
 
   lex = function(lexExpression, definedActions, environment) {
     lexExpression = lexExpression.trim();
+
     if (lexExpression) {
       expression = lexExpression;
-      actions = definedActions;
+      actions = definedActions || defaultActions;
       env = environment;
       busy ? busy.splice(0) : (busy = []);
       patterns ? patterns.splice(0) : (patterns = []);
@@ -225,8 +226,8 @@ reLexer = function(rules, root) {
     return lex(expression);
   };
 
-  this.parse = function(expression, actions, env) {
-    return lex(expression, actions || {}, env || {});
+  this.parse = function(expression, env, actions) {
+    return lex(expression, actions, env || {});
   };
 
 };

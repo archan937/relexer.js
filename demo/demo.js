@@ -84,9 +84,7 @@ var
       }
     }
   },
-  lexer = new reLexer(
-    rules, 'expression'
-  );
+  lexer = new reLexer(rules, 'expression', actions);
 
 RegExp.prototype.toJSON = function() {
   return 'REGEX:' + this.toString() + ':REGEX';
@@ -101,8 +99,8 @@ function demonstrate(expression, env) {
         });
       }
     },
-    ast = JSON.stringify(lexer.tokenize(expression), null, 2),
-    result = JSON.stringify(lexer.parse(expression, actions, env));
+    result = JSON.stringify(lexer.parse(expression, env)),
+    ast = JSON.stringify(lexer.tokenize(expression), null, 2);
 
   if (ast) {
     ast = ast.replace(/\[\{/, '[\n  {')
@@ -112,7 +110,7 @@ function demonstrate(expression, env) {
 
   document.write('Expression:<pre>' + JSON.stringify(expression, null, 2) + '</pre>');
   document.write('Environment:<pre>' + JSON.stringify(env || {}) + '</pre>');
-  document.write('AST:<pre>' + replace(ast) + '</pre>');
   document.write('Result:<pre>' + result + '</pre>');
+  document.write('AST:<pre>' + replace(ast) + '</pre>');
   document.write('<br><br>');
 };
