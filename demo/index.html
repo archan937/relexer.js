@@ -9,9 +9,11 @@
   </head>
   <body>
     <script>
+      demonstrate('');
+      demonstrate(' ');
       demonstrate('false');
       demonstrate('true');
-      demonstrate('82');
+      demonstrate(' 82 ');
       demonstrate('1.8');
       demonstrate('19 + 82');
       demonstrate('"Paul Engel"');
@@ -21,7 +23,7 @@
           name: 'Engel Inc.'
         }
       });
-      demonstrate('(bool) ? "Yes" : "No"');
+      demonstrate('bool ? "Yes" : "No"');
       demonstrate('bool ? "Yes" : "No"', {
         bool: true
       });

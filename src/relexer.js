@@ -37,12 +37,12 @@ reLexer = function(rules, root) {
     }
   },
 
-  matchString = function(patternOrString) {
+  matchString = function(patternOrString, lazyParent) {
     var
       segments = patternOrString.match(/(.+?)(>(\w+))?(&)?(\?)?$/) || [],
       pattern = segments[1],
       name = segments[3],
-      lazy = !!segments[4],
+      lazy = lazyParent || !!segments[4],
       optional = !!segments[5],
       rule = ((pattern || '').match(/:(\w+)/) || [])[1],
       match;
@@ -109,7 +109,7 @@ reLexer = function(rules, root) {
       pattern = rules[rule],
       action = actions && actions[rule],
       match,
-      func;
+      parse;
 
     if (!pattern) {
       rule = undefined;
@@ -123,7 +123,7 @@ reLexer = function(rules, root) {
       match = matchPattern(pattern);
       break;
     case String:
-      match = matchString(pattern);
+      match = matchString(pattern, lazy);
       break;
     case Array:
       match = matchConjunction(pattern, lazy);
@@ -135,10 +135,10 @@ reLexer = function(rules, root) {
         if (!env || action)
           match = normalizeMatch(name, lazy, rule, pattern, match);
         if (env && action) {
-          func = function() {
-            return action(env, match.captures, match);
-          };
-          match = lazy ? func : func();
+          parse = function() {
+            return action(env, this.captures, this);
+          }.bind(match);
+          match = lazy ? parse : parse();
         }
       }
 

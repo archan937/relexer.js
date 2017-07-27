@@ -7,7 +7,7 @@ var
     string: /(["'])(?:(?=(\\?))\2.)*?\1/,
     primitive: ':boolean|:number|:string|:path',
     ternary: [
-      ':expression>left',
+      ':expression>statement',
       ':space?', '?', ':space?',
       ':expression>true&',
       ':space?', ':', ':space?',
@@ -49,8 +49,7 @@ var
       return value;
     },
     ternary: function(env, captures) {
-      console.log(captures)
-      return captures.left ? captures.true() : captures.false();
+      return captures.statement ? captures.true() : captures.false();
     },
     binaryExpression: function(env, captures) {
       var
