@@ -14,105 +14,102 @@ reLexer = function(rules, root) {
   rules || (rules = {});
 
   var
-    busy = [],
-    patterns = [],
-    state,
     actions,
+    expression,
     env,
+    busy,
+    patterns,
 
   defaultRoot = function() {
     return Object.keys(rules).pop();
   },
 
-  matchPattern = function(expression, pattern) {
+  matchPattern = function(pattern) {
     if (typeof(pattern) == 'string')
       pattern = new RegExp(pattern.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
 
     var
       match = expression.match(pattern);
 
-    if (match && match.index == 0)
-      return {match: match[0]};
+    if (match && match.index == 0) {
+      expression = expression.substring(match[0].length);
+      return match[0];
+    }
   },
 
-  matchString = function(expression, patternOrString) {
+  matchString = function(patternOrString) {
     var
-      segments = patternOrString.match(/(.+?)(>(\w+))?(\?)?$/) || [],
+      segments = patternOrString.match(/(.+?)(>(\w+))?(&)?(\?)?$/) || [],
       pattern = segments[1],
       name = segments[3],
-      optional = !!segments[4],
+      lazy = !!segments[4],
+      optional = !!segments[5],
       rule = ((pattern || '').match(/:(\w+)/) || [])[1],
       match;
 
     if (name || optional || (rule && rules[rule])) {
+
       if (pattern.match(/\|/)) {
-        pattern = pattern.split('|');
-        pattern.conjunction = 'or';
+        pattern = reLexer.or.apply(null, pattern.split('|'));
       } else {
         pattern = pattern.replace(':', '');
       }
 
-      match = matchExpression(expression, pattern);
+      match = matchExpression(pattern, name, lazy);
 
-      if (match) {
-        if (name) {
-          match.captures[name] = match.match;
-        }
-      } else if (optional) {
-        match = {match: ''};
+      if ((match == undefined) && optional) {
+        match = '';
       }
 
     } else {
-      match = matchPattern(expression, patternOrString);
+      match = matchPattern(patternOrString);
     }
 
     return match;
   },
 
-  matchConjunction = function(expression, array) {
+  matchConjunction = function(array, lazy) {
+    array.__conjunction__ || (array.__conjunction__ = 'and');
+
     var
-      conjunction = array.conjunction || 'and',
-      i, m, pattern, key, match, captures = {};
+      initialExpression = expression,
+      conjunction = array.__conjunction__,
+      i, pattern, match, matches = [];
 
     for (i = 0; i < array.length; i++) {
       pattern = array[i];
 
       if (busy.indexOf(pattern) == -1) {
-
         busy.push(pattern);
-        m = matchExpression(expression, pattern);
+        match = matchExpression(pattern, null, lazy);
         busy.splice(busy.indexOf(pattern), 1);
 
-        if (m) {
-          expression = expression.substring(m.match.length);
-          match = (match || '') + m.match;
-
-          for (key in m.captures) {
-            if (m.captures.hasOwnProperty(key))
-              captures[key] = m.captures[key];
+        if (match != undefined) {
+          if (conjunction == 'and') {
+            matches.push(match);
+          } else {
+            return match;
           }
-
-          if (conjunction == 'or')
-            break;
-
         } else if (conjunction == 'and') {
+          expression = initialExpression;
           return;
         }
       }
     }
 
-    if (match) {
-      return {match: match, captures: captures};
-    }
+    if (matches.length)
+      return matches;
   },
 
-  matchExpression = function(expression, ruleOrPattern) {
+  matchExpression = function(ruleOrPattern, name, lazy) {
     var
-      required = arguments.length == 1,
+      isRootMatch = arguments.length == 0,
+      initialExpression = expression,
       rule = ruleOrPattern || root || defaultRoot(),
       pattern = rules[rule],
+      action = actions && actions[rule],
       match,
-      action;
+      func;
 
     if (!pattern) {
       rule = undefined;
@@ -123,53 +120,80 @@ reLexer = function(rules, root) {
 
     switch (pattern.constructor) {
     case RegExp:
-      match = matchPattern(expression, pattern);
+      match = matchPattern(pattern);
       break;
     case String:
-      match = matchString(expression, pattern);
+      match = matchString(pattern);
       break;
     case Array:
-      match = matchConjunction(expression, pattern);
+      match = matchConjunction(pattern, lazy);
       break;
     }
 
-    if (match && (!required || match.match.length || !expression.length)) {
-      match.captures || (match.captures = {});
-
-      if (actions) {
-        if (action = actions[rule] || actions['*']) {
-          state = action(env, match.match, match.captures);
+    if ((match != undefined) || (initialExpression != expression)) {
+      if (rule || name) {
+        if (!env || action)
+          match = normalizeMatch(name, lazy, rule, pattern, match);
+        if (env && action) {
+          func = function() {
+            return action(env, match.captures, match);
+          };
+          match = lazy ? func : func();
         }
-      } else {
-        var spec = {
-          rule: rule,
-          pattern: pattern
-        };
-        if (pattern.conjunction)
-          spec.conjunction = pattern.conjunction;
-        spec.match = match.match;
-        spec.captures = match.captures;
-        state.push(spec);
+      }
+
+      if (env && name) {
+        match = [name, match];
+        match.__named__ = true;
       }
 
       return match;
 
-    } else if (required) {
+    } else if (isRootMatch) {
       throw 'Unable to match expression: ' + JSON.stringify(expression) + ' (rule: ' + rule + ')';
     }
   },
 
-  scan = function(expression) {
-    try {
-      var
-        match = matchExpression(expression),
-        index;
+  normalizeMatch = function(name, lazy, rule, pattern, match) {
+    var
+      specs = {},
+      object = {},
+      capture;
 
-      expression = expression.substring(match.match.length);
-      if (!expression.length)
-        return state;
-      else
-        return scan(expression);
+    if (name)
+      specs.name = name;
+
+    if (lazy)
+      specs.lazy = lazy;
+
+    if (rule)
+      specs.rule = rule;
+
+    specs.pattern = pattern;
+
+    if (pattern.__conjunction__)
+      specs.conjunction = pattern.__conjunction__;
+
+    if (env && (match.constructor == Array)) {
+      for (var i = 0; i < match.length; i++) {
+        capture = match[i];
+        if (capture && capture.__named__) {
+          object[capture[0]] = capture[1];
+        }
+      }
+    }
+
+    specs.captures = Object.keys(object).length ? object : match;
+
+    return specs;
+  },
+
+  scan = function() {
+    var match, index;
+
+    try {
+      match = matchExpression();
+      return expression.length ? scan() : match;
 
     } catch(e) {
       index = e.message && e.message.match('Maximum call stack size exceeded') ? -30 : -15;
@@ -178,14 +202,15 @@ reLexer = function(rules, root) {
     }
   },
 
-  lex = function(expression, definedActions, environment) {
-    if (expression) {
-      busy.splice(0);
-      patterns.splice(0);
-      state = definedActions ? undefined : [];
+  lex = function(lexExpression, definedActions, environment) {
+    lexExpression = lexExpression.trim();
+    if (lexExpression) {
+      expression = lexExpression;
       actions = definedActions;
       env = environment;
-      return scan(expression);
+      busy ? busy.splice(0) : (busy = []);
+      patterns ? patterns.splice(0) : (patterns = []);
+      return scan();
     }
   };
 
@@ -203,20 +228,17 @@ reLexer = function(rules, root) {
   this.parse = function(expression, actions, env) {
     return lex(expression, actions || {}, env || {});
   };
-
-  this.and = reLexer.and;
-  this.or = reLexer.or;
 };
 
 and = reLexer.and = function() {
   var array = Array.prototype.slice.call(arguments);
-  array.conjunction = 'and';
+  array.__conjunction__ = 'and';
   return array;
 };
 
 or = reLexer.or = function() {
   var array = Array.prototype.slice.call(arguments);
-  array.conjunction = 'or';
+  array.__conjunction__ = 'or';
   return array;
 };
 

@@ -9,9 +9,9 @@ var
     ternary: [
       ':expression>left',
       ':space?', '?', ':space?',
-      ':expression>true',
+      ':expression>true&',
       ':space?', ':', ':space?',
-      ':expression>false'
+      ':expression>false&'
     ],
     encapsulation: and(
       '(', ':space?', ':expression', ':space?', ')'
@@ -19,12 +19,11 @@ var
     binaryExpression: [
       ':expression>left',
       ':space?',
-      '+|-|*|/|<|<=|==|!=|=>|>>operator',
+      '+|-|*|/|<|<=|==|!=|>=|>>operator',
       ':space?',
       ':expression>right'
     ],
     expression: or(
-      ':space',
       ':binaryExpression',
       ':ternary',
       ':encapsulation',
@@ -49,8 +48,38 @@ var
       }
       return value;
     },
-    ternary: function(env, ternary, captures) {
-      return captures.left ? captures.true : captures.false;
+    ternary: function(env, captures) {
+      console.log(captures)
+      return captures.left ? captures.true() : captures.false();
+    },
+    binaryExpression: function(env, captures) {
+      var
+        left = captures.left,
+        operator = captures.operator,
+        right = captures.right;
+
+      switch(operator) {
+      case '+':
+        return left + right;
+      case '-':
+        return left - right;
+      case '*':
+        return left * right;
+      case '/':
+        return left / right;
+      case '<':
+        return left < right;
+      case '<=':
+        return left <= right;
+      case '==':
+        return left == right;
+      case '!=':
+        return left != right;
+      case '>':
+        return left > right;
+      case '>=':
+        return left >= right;
+      }
     }
   },
   lexer = new reLexer(
