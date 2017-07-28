@@ -232,12 +232,6 @@ reLexer = function(rules, root, defaultActions) {
 
 };
 
-and = reLexer.and = function() {
-  var array = [].slice.call(arguments);
-  array._conj_ = 'and';
-  return array;
-};
-
 or = reLexer.or = function() {
   var array = [].slice.call(arguments);
   array._conj_ = 'or';
