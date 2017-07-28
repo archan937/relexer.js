@@ -23,7 +23,16 @@
           name: 'Engel Inc.'
         }
       });
+      demonstrate('a || b', {
+        a: 0,
+        b: 2
+      });
+      demonstrate('a || b', {
+        a: 1,
+        b: 2
+      });
       demonstrate('bool ? "Yes" : "No"');
+      demonstrate('bool || true ? "Yes" : "No"');
       demonstrate('(1 > -1) ? "Yes" : "No"');
       demonstrate('(1 > 2) ? "Yes" : "No"');
       demonstrate('bool ? "Yes" : "No"', {

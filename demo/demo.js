@@ -1,14 +1,28 @@
 var
   rules = {
     space: /\s+/,
-    path: /[a-zA-Z](\w+)\.?([\w+\.]*)/,
+    path: /[a-zA-Z](\w*)\.?([\w+\.]+)?/,
     string: /(["'])(?:(?=(\\?))\2.)*?\1/,
     number: /-?\d+(\.\d+)?/,
     boolean: /(true|false)/,
     primitive: ':boolean|:number|:string|:path',
-    encapsulation: and(
-      '(', ':space?', ':expression>expression&', ':space?', ')'
+    operator: or(
+      '&&',
+      '||',
+      '+',
+      '-',
+      '*',
+      '/',
+      '<',
+      '<=',
+      '==',
+      '!=',
+      '>=',
+      '>'
     ),
+    encapsulation: [
+      '(', ':space?', ':expression>expression&', ':space?', ')'
+    ],
     ternary: [
       ':expression>statement',
       ':space?', '?', ':space?',
@@ -19,7 +33,7 @@ var
     binaryExpression: [
       ':expression>left',
       ':space?',
-      '+|-|*|/|<|<=|==|!=|>=|>>operator',
+      ':operator>operator',
       ':space?',
       ':expression>right'
     ],
@@ -61,6 +75,10 @@ var
         right = captures.right;
 
       switch(operator) {
+      case '&&':
+        return left && right;
+      case '||':
+        return left || right;
       case '+':
         return left + right;
       case '-':
