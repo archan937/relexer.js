@@ -108,27 +108,29 @@ RegExp.prototype.toJSON = function() {
   return 'REGEX:' + this.toString() + ':REGEX';
 };
 
+function correctJSON(json) {
+  if (json) {
+    return json.replace(/\[\{/, '[\n  {')
+               .replace(/\n/g, '<br>')
+               .replace(/\s/g, '&nbsp;')
+               .replace(/"REGEX:(.*?):REGEX"/g, function(m, regex) {
+      return regex.replace(/\\\\/g, '\\');
+    });
+  }
+}
+
 function demonstrate(expression, env) {
   var
-    replace = function(json) {
-      if (json) {
-        return json.replace(/"REGEX:(.*?):REGEX"/g, function(m, regex) {
-          return regex.replace(/\\\\/g, '\\');
-        });
-      }
-    },
     result = JSON.stringify(lexer.parse(expression, env)),
-    ast = JSON.stringify(lexer.tokenize(expression), null, 2);
+    ast = correctJSON(JSON.stringify(lexer.tokenize(expression), null, 2));
 
-  if (ast) {
-    ast = ast.replace(/\[\{/, '[\n  {')
-             .replace(/\n/g, '<br>')
-             .replace(/\s/g, '&nbsp;');
-  }
+  expression = JSON.stringify(expression, null, 2);
+  env = JSON.stringify(env || {})
+            .replace(/":/g, '": ')
+            .replace(/,"/g, ', "');
 
-  document.write('Expression:<pre>' + JSON.stringify(expression, null, 2) + '</pre>');
-  document.write('Environment:<pre>' + JSON.stringify(env || {}) + '</pre>');
-  document.write('Result:<pre>' + result + '</pre>');
-  document.write('AST:<pre>' + replace(ast) + '</pre>');
-  document.write('<br><br>');
+  document.write('Expression<pre>' + expression + '</pre>');
+  document.write('Environment<pre>' + env + '</pre>');
+  document.write('Result<pre>' + result + '</pre>');
+  document.write('AST<pre>' + ast + '</pre>');
 };
