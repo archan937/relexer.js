@@ -156,7 +156,7 @@ reLexer = function(rules, root, defaultActions) {
     var
       specs = {},
       object = {},
-      capture;
+      capture, i;
 
     if (name)
       specs.name = name;
@@ -173,7 +173,7 @@ reLexer = function(rules, root, defaultActions) {
       specs.conjunction = pattern._conj_;
 
     if (env && (match.constructor == Array)) {
-      for (var i = 0; i < match.length; i++) {
+      for (i = 0; i < match.length; i++) {
         capture = match[i];
         if (capture && capture._named_) {
           object[capture[0]] = capture[1];

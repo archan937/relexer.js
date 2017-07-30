@@ -24,12 +24,12 @@
         A very simple Javascript <span>lexer</span> and <span>parser</span>
       </h2>
       <h3>
-        Introduction
+        <a href="#introduction" name="introduction">Introduction</a>
       </h3>
       <p>
-        To define your our grammar you need to define the <span>rules</span> first.
-        Also, you need to specify the <span>root</span> rule.
-        After having done that, you will be able to generate an AST when <span>lexing</span> (tokenizing) a certain expression.
+        To define your grammar you need to define the <span>rules</span> first.
+        Also, you need to specify the <span>root rule</span>.
+        After having done that, you will be able to generate a concrete syntax tree (parse tree) when <span>lexing</span> (tokenizing) a certain expression.
       </p>
       <code>
         lexer = new reLexer(rules, 'expression');
@@ -56,26 +56,46 @@
         lexer.parse('company.name', {company: {name: 'Engel Inc.'}});
       </code>
       <h3>
-        Demo setup
+        <a href="#try_it" name="try_it">Try it yourself</a>
       </h3>
       <p>
-        These are the rules used for the examples below:
-        <code class="small">
+        You can try out <span>reLexer.js</span> right here.
+        Just fill in the <strong>expression</strong> and <strong>environment</strong> to tokenize and parse.
+        The rules and actions used are documented in the <a href="#setup">Setup</a> section.
+        <form>
+          # Expression
+          <input type="text" name="expression" value='sad ? "Hi, why so sad?" : "Hello, you! :D"'>
+          # Environment
+          <input type="text" name="environment" value='{sad: false}'>
+          <input type="submit" value="Parse expression">
+          <button>Reset</button>
+          <span># Result</span>
+          <code class="small" name="result"></code>
+          <span># Parse tree</span>
+          <code class="small limited" name="parse_tree"></code>
+        </form>
+      </p>
+      <h3>
+        <a href="#setup" name="setup">Setup</a>
+      </h3>
+      <p>
+        These are the rules used for this demo page are as follows.
+        <code class="small limited">
           <script>
             document.write(correctJSON(JSON.stringify(rules, null, 2)));
           </script>
         </code>
       </p>
       <p>
-        And these are the defined actions:
-        <code class="small">
+        And these are the corresponding actions used for evaluation.
+        <code class="small limited">
           <script>
             document.write(correctJSON(JSON.stringify(actions, null, 2)));
           </script>
         </code>
       </p>
       <h3>
-        Examples
+        <a href="#examples" name="examples">Examples</a>
       </h3>
       <h4>
         > Booleans
@@ -156,5 +176,33 @@
         </script>
       </div>
     </div>
+    <script>
+      var
+        form = document.getElementsByTagName('form')[0],
+        reset = document.getElementsByTagName('button')[0],
+        expression = document.getElementsByName('expression')[0],
+        environment = document.getElementsByName('environment')[0],
+        result = document.getElementsByName('result')[0],
+        parseTree = document.getElementsByName('parse_tree')[0];
+
+      form.onsubmit = function() {
+        var
+          exp = expression.value,
+          env = eval('(' + (environment.value || '{}') + ')'), // I don't care whether you abuse eval() for this purpose
+          res = JSON.stringify(lexer.parse(exp, env)),
+          tree = correctJSON(JSON.stringify(lexer.tokenize(exp), null, 2));
+
+        form.className = 'evaluated';
+        result.innerHTML = res + '&nbsp;';
+        parseTree.innerHTML = tree + '&nbsp;';
+
+        return false;
+      };
+
+      reset.onclick = function() {
+        form.className = '';
+        return false;
+      };
+    </script>
   </body>
 </html>

@@ -1,6 +1,62 @@
 # reLexer.js
 
-A very simple lexer and parser library written in Javascript.
+A very simple Javascript lexer and parser.
+
+## Installation
+
+Just include relexer.js:
+
+    <script src="path/to/relexer.js" type="text/javascript"></script>
+
+**Note**: include `relexer.min.js` for the minified relexer.js library
+
+## Live examples
+
+Please visit [http://archan937.github.com/relexer.js](http://archan937.github.com/relexer.js) to see live examples.
+
+## Usage
+
+### Basic concepts
+
+To define your grammar you need to define the `rules`. These rules will be used for **tokenizing** expressions into a concrete syntax tree / parse tree. You need to specify which rule is the `root rule` that reLexer will try to match first.
+
+Once you have a parse tree, you are able to act on it using so called `actions` (the process of actually **parsing** expressions). Every action corresponds with a grammar rule.
+
+An action is a function which receives information about captured values and it should return the evaluated value. Eventually you will get the result of the evaluated expression.
+
+### Tokenizing and parsing
+
+To define a lexer use the `reLexer` constructor. Specify the rules and root rule.
+
+```javascript
+lexer = new reLexer(rules, '<root rule>');
+```
+
+Optionally, you can immediately define its actions as a third argument.
+
+```javascript
+lexer = new reLexer(rules, '<root rule>', actions);
+```
+
+Tokenizing an expression is as easy as follows.
+
+```javascript
+lexer.tokenize('"Company " + company.name');
+```
+
+To parse an expression, you need to specify the expression and an optional environment available during parsing. You can specify (or override) actions as a third argument.
+
+```javascript
+lexer.parse('"Company " + company.name', {company: {name: 'Engel Inc.'}}, actions);
+```
+
+### Grammar rules
+
+...
+
+### Defining actions
+
+...
 
 ### Contact me
 
