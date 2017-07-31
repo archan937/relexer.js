@@ -66,8 +66,8 @@
           # Expression
           <input type="text" name="expression" value='sad ? "Hi, why so sad?" : "Hello, you! :D"'>
           # Environment
-          <input type="text" name="environment" value='{sad: false}'>
-          <input type="submit" value="Parse expression">
+          <input type="text" name="environment" value='{sad: false}' autocomplete="off">
+          <input type="submit" value="Parse expression" autocomplete="off">
           <button>Reset</button>
           <span># Result</span>
           <code class="small" name="result"></code>
@@ -201,6 +201,8 @@
 
       reset.onclick = function() {
         form.className = '';
+        expression.value = 'sad ? "Hi, why so sad?" : "Hello, you! :D"';
+        environment.value = '{sad: false}';
         return false;
       };
     </script>
