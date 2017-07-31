@@ -54,6 +54,8 @@
         lexer.parse('19 + 82');
         <br>
         lexer.parse('company.name', {company: {name: 'Engel Inc.'}});
+        <br>
+        lexer.parse('company.name', {company: {name: 'Engel Inc.'}}, actions);
       </code>
       <h3>
         <a href="#try_it" name="try_it">Try it yourself</a>
@@ -61,13 +63,13 @@
       <p>
         You can try out <span>reLexer.js</span> right here.
         Just fill in the <strong>expression</strong> and <strong>environment</strong> to tokenize and parse.
-        The rules and actions used are documented in the <a href="#setup">Setup</a> section.
+        The grammar rules and actions used are documented in the <a href="#setup">Setup</a> section.
         <form>
           # Expression
           <input type="text" name="expression" value='sad ? "Hi, why so sad?" : "Hello, you! :D"'>
           # Environment
-          <input type="text" name="environment" value='{sad: false}'>
-          <input type="submit" value="Parse expression">
+          <input type="text" name="environment" value='{sad: false}' autocomplete="off">
+          <input type="submit" value="Parse expression" autocomplete="off">
           <button>Reset</button>
           <span># Result</span>
           <code class="small" name="result"></code>
@@ -79,7 +81,7 @@
         <a href="#setup" name="setup">Setup</a>
       </h3>
       <p>
-        These are the rules used for this demo page are as follows.
+        These are the grammar rules used for this demo page are as follows.
         <code class="small limited">
           <script>
             document.write(correctJSON(JSON.stringify(rules, null, 2)));
@@ -201,6 +203,8 @@
 
       reset.onclick = function() {
         form.className = '';
+        expression.value = 'sad ? "Hi, why so sad?" : "Hello, you! :D"';
+        environment.value = '{sad: false}';
         return false;
       };
     </script>
