@@ -20,11 +20,13 @@ Please visit [http://archan937.github.com/relexer.js](http://archan937.github.co
 
 ### Basic concepts
 
-To define your grammar you need to define the `rules`. These rules will be used for **tokenizing** expressions into a concrete syntax tree / parse tree. You need to specify which rule is the `root rule` that reLexer will try to match first.
+To define your grammar you need to define the grammar `rules`. These rules will be used for **tokenizing** expressions into a concrete syntax tree / parse tree. You need to specify which rule is the `root rule` that reLexer will try to match first.
 
 Once you have a parse tree, you are able to act on it using so called `actions` (the process of actually **parsing** expressions). Every action corresponds with a grammar rule.
 
 An action is a function which receives information about captured values and it should return the evaluated value. Eventually you will get the result of the evaluated expression.
+
+We will continue using the [demo page](https://archan937.github.io/relexer.js/#setup) as an example for the rest of this README.
 
 ### Tokenizing and parsing
 
@@ -54,7 +56,77 @@ lexer.parse('"Company " + company.name', {company: {name: 'Engel Inc.'}}, action
 
 ### Grammar rules
 
-...
+As already said, your grammar is defined by its rules. They are bundled in an object of which the keys are the name of the rules and the values are `patterns` which is either one of the following:
+
+* `regular expression` - Matching a portion of the tokenized or parsed expression
+* `string` - Which is either a simple "static" string or a "grammar rule expression" (explained later)
+* `array` - A set of regular expressions, static strings or grammar rule expressions of which one or all of the patterns should match to pass
+
+#### Regular expressions
+
+It is as straightforward as you expect it to be. The `number` grammar rule used on the demo page for instance is as follows:
+
+```javascript
+number: /-?\d+(\.\d+)?/,
+```
+
+#### Grammar rule expressions
+
+Grammar rule expressions consists of the following:
+
+1. `pattern` - Which refers to another rule or either one of a set of possible rules
+2. `name` - Resulting in a "named capture" for actions (**optional**)
+3. `lazy marker` - Indicating whether or not the capture should be evaluated immediately or only when accessing the capture value (**optional**)
+4. `optional marker` - Indicating whether or not the capture is optional and thus is not necessarily required (**optional**)
+
+To refer to another rule within a `pattern`, use the name of the rule prefixed with `:` (colon). So grammar rule `boolean` becomes `:boolean` for instance.
+
+Grammar rule `primitive` matches either `boolean`, `number`, `string` or `path`. Please notice that you need to separate the rules with a `|` (pipe).
+
+```javascript
+primitive: ':boolean|:number|:string|:path',
+```
+
+You can give a pattern a name (resulting in a named capture) by postfixing the pattern with a `>` (greater than) following by the name. As an example, the `binaryExpression` rule defines the named capture `left` which implies to *"match an expression and name it 'left'"*.
+
+```javascript
+binaryExpression: [
+  ':expression>left',
+```
+
+To mark a capture as lazy, postfix the pattern with an `&` (ampersand). Looking at the `ternary` grammar rule, it marks the `true` and `false` capture as lazy which implies to *"match an expression and name it 'true' and only evaluate the capture when accessing it"*.
+
+```javascript
+ternary: [
+  ':expression>statement',
+  ':space?', '?', ':space?',
+  ':expression>true&',
+  ':space?', ':', ':space?',
+  ':expression>false&'
+```
+
+And of course, the optional marker `?` (question mark) implies that the pattern / rule is optional (it does not necessarily have to be matched to pass). For instance, `:space?` which implies to *"match a space but it is not required"*.
+
+#### Arrays
+
+To imply that a rule only passes when an expression matches a set of successive patterns, put them in an array. The `encapsulation` grammar rule is a good example:
+
+```javascript
+encapsulation: [
+  '(', ':space?', ':expression>expression&', ':space?', ')'
+],
+```
+
+Aside from using a grammar rule expression containing rules delimited with a `|` (pipe), you can also use the `or()` (also defined as `reLexer.or()`) to imply that a rule passes when an expression matches either one of the set of rules.
+
+```javascript
+expression: or(
+  ':binaryExpression',
+  ':ternary',
+  ':encapsulation',
+  ':primitive'
+)
+```
 
 ### Defining actions
 
@@ -68,7 +140,7 @@ The action function will be invoked with the following arguments:
 
 #### Unnamed captures
 
-If we take the [demo page](https://archan937.github.io/relexer.js/) as an example, the conditions are as follows:
+For the `boolean` grammar rule, the conditions are as follows:
 
 - The first argument (`env`) is not important for use so we will just ignore it
 - The second argument (`captures`) on the other hand is the **captured string portion** of the parsed expression which is based on the boolean grammar rule (`/(true|false)/`). It is either `'true'` or `'false'`. So the value it should return is quite simple: the capture has to equal `'true'` and otherwise it should return `false`
