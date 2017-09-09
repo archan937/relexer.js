@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>reLexer.js</title>
+    <link rel="stylesheet" href="./demo.css">
+    <script src="../relexer.min.js"></script>
+    <script src="./lexer.js"></script>
+    <script src="./demo.js"></script>
+  </head>
+  <body>
+    <a href="https://github.com/archan937/relexer.js" class="github-corner">
+      <svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;">
+        <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+        <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+        <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path>
+      </svg>
+    </a>
+    <div class="demo">
+      <h1>
+        reLexer.js
+      </h1>
+      <hr>
+      <h2>
+        A very simple Javascript <span>lexer</span> and <span>parser</span>
+      </h2>
+      <h3>
+        <a href="#introduction" name="introduction">Introduction</a>
+      </h3>
+      <p>
+        To define your grammar you need to define the <span>rules</span> first.
+        Also, you need to specify the <span>root rule</span>.
+        After having done that, you will be able to generate a concrete syntax tree (parse tree) when <span>lexing</span> (tokenizing) a certain expression.
+      </p>
+      <code>
+        lexer = new reLexer(rules, 'expression');
+      </code>
+      <p>
+        Optionally, you can also define <span>actions</span> which will be used when <span>parsing</span> expressions.
+      </p>
+      <code>
+        lexer = new reLexer(rules, 'expression', actions);
+      </code>
+      <p>
+        Lexing an expression is as easy as follows:
+      </p>
+      <code>
+        lexer.tokenize('1 > 2 ? "Yes" : "No"');
+      </code>
+      <p>
+        When parsing an expression, you are able to define the <span>environment</span> available during parsing.
+        Also, you can define (or override in case you have multiple parsing purposes) the actions.
+      </p>
+      <code>
+        lexer.parse('19 + 82');
+        <br>
+        lexer.parse('company.name', {company: {name: 'Engel Inc.'}});
+        <br>
+        lexer.parse('company.name', {company: {name: 'Engel Inc.'}}, actions);
+      </code>
+      <h3>
+        <a href="#try_it" name="try_it">Try it yourself</a>
+      </h3>
+      <p>
+        You can try out <span>reLexer.js</span> right here.
+        Just fill in the <strong>expression</strong> and <strong>environment</strong> to tokenize and parse.
+        The grammar rules and actions used are documented in the <a href="#setup">Setup</a> section.
+        <form>
+          # Expression
+          <input type="text" name="expression" value='sad ? "Hi, why so sad?" : "Hello, you! :D"'>
+          # Environment
+          <input type="text" name="environment" value='{sad: false}' autocomplete="off">
+          <input type="submit" value="Parse expression" autocomplete="off">
+          <button>Reset</button>
+          <span># Result</span>
+          <code class="small" name="result"></code>
+          <span># Parse tree</span>
+          <code class="small limited" name="parse_tree"></code>
+        </form>
+      </p>
+      <h3>
+        <a href="#setup" name="setup">Setup</a>
+      </h3>
+      <p>
+        These are the grammar rules used for this demo page are as follows.
+        <code class="small limited">
+          <script>
+            document.write(correctJSON(JSON.stringify(rules, null, 2)));
+          </script>
+        </code>
+      </p>
+      <p>
+        And these are the corresponding actions used for evaluation.
+        <code class="small limited">
+          <script>
+            document.write(correctJSON(JSON.stringify(actions, null, 2)));
+          </script>
+        </code>
+      </p>
+      <h3>
+        <a href="#examples" name="examples">Examples</a>
+      </h3>
+      <h4>
+        > Booleans
+      </h4>
+      <div class="examples">
+        <script>
+          demonstrate('false');
+          demonstrate('true');
+        </script>
+      </div>
+      <h4>
+        > Numbers
+      </h4>
+      <div class="examples">
+        <script>
+          demonstrate(' 82 ');
+          demonstrate('1.8');
+        </script>
+      </div>
+      <h4>
+        > Strings
+      </h4>
+      <div class="examples">
+        <script>
+          demonstrate('"Paul Engel"');
+        </script>
+      </div>
+      <h4>
+        > Objects
+      </h4>
+      <div class="examples">
+        <script>
+          demonstrate('company.name');
+          demonstrate('company.name', {
+            company: {
+              name: 'Engel Inc.'
+            }
+          });
+        </script>
+      </div>
+      <h4>
+        > Logical operators
+      </h4>
+      <div class="examples">
+        <script>
+          demonstrate('a || b', {
+            a: 0,
+            b: 2
+          });
+          demonstrate('a || b', {
+            a: 1,
+            b: 2
+          });
+        </script>
+      </div>
+      <h4>
+        > Calculations
+      </h4>
+      <div class="examples">
+        <script>
+          demonstrate('19 + 82');
+          demonstrate('2 + 3 + 4');
+          demonstrate('(1 + 2) * 3');
+          demonstrate('1 + (2 * 3)');
+          demonstrate('1 + 2 * 3');
+          demonstrate('2 * 3 + 1');
+          demonstrate('1 + 2 * 3 + 1');
+          demonstrate('2 * 3 + 1 + 4');
+          demonstrate('(1 + 2 * 3)');
+          demonstrate('1 + (1 - 2) + 3');
+        </script>
+      </div>
+      <h4>
+        > Ternary statements
+      </h4>
+      <div class="examples">
+        <script>
+          demonstrate('1 < 2 ? "Yes" : "No"');
+          demonstrate('1 > 2 ? "Yes" : "No"');
+          demonstrate('count >= 5 ? "Limit exceeded" : "You have " + (5 - count) + " credits left"', {
+            count: 3
+          });
+          demonstrate('count >= 5 ? "Limit exceeded" : "You have " + (5 - count) + " credits left"', {
+            count: 5
+          });
+        </script>
+      </div>
+    </div>
+    <script>
+      var
+        form = document.getElementsByTagName('form')[0],
+        reset = document.getElementsByTagName('button')[0],
+        expression = document.getElementsByName('expression')[0],
+        environment = document.getElementsByName('environment')[0],
+        result = document.getElementsByName('result')[0],
+        parseTree = document.getElementsByName('parse_tree')[0];
+
+      form.onsubmit = function() {
+        var
+          exp = expression.value,
+          env = eval('(' + (environment.value || '{}') + ')'), // I don't care whether you abuse eval() for this purpose
+          res = JSON.stringify(lexer.parse(exp, env)),
+          tree = correctJSON(JSON.stringify(lexer.tokenize(exp), null, 2));
+
+        form.className = 'evaluated';
+        result.innerHTML = res + '&nbsp;';
+        parseTree.innerHTML = tree + '&nbsp;';
+
+        return false;
+      };
+
+      reset.onclick = function() {
+        form.className = '';
+        expression.value = 'sad ? "Hi, why so sad?" : "Hello, you! :D"';
+        environment.value = '{sad: false}';
+        return false;
+      };
+    </script>
+  </body>
+</html>
