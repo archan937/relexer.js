@@ -19,11 +19,24 @@ reLexer = function(rules, root, defaultActions) {
     actions,
     env,
     busy,
-    patterns,
+    matches,
+    retried,
+    stacktrace,
+    u,//ndefined
+    p,//recedence
+    c = '_conj_',
+    n = '_named_',
+    f = 'ƒ',
+    dummy = 'ﬁ',
+
+  addMatch = function(identifier, expression, match) {
+    if (identifier.indexOf(dummy) == -1)
+      matches[identifier] = [expression, match];
+  },
 
   matchPattern = function(pattern) {
     if (typeof(pattern) == 'string')
-      pattern = new RegExp(pattern.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+      pattern = new RegExp(pattern.replace(/[-\/\\^\$\*\+\?\.\(\)|\[\]\{\}]/g, '\\$&'));
 
     var
       match = expression.match(pattern);
@@ -36,25 +49,25 @@ reLexer = function(rules, root, defaultActions) {
 
   matchString = function(patternOrString, lazyParent) {
     var
-      segments = patternOrString.match(/(.+?)(>(\w+))?(&)?(\?)?$/) || [],
+      segments = patternOrString.match(/(.+?)(>(\w+))?(&)?(\?)?(\/(\d+))?$/) || [],
       pattern = segments[1],
       name = segments[3],
       lazy = lazyParent || !!segments[4],
       optional = !!segments[5],
+      precedence = segments[7] ? parseInt(segments[7], 10) : u,
       rule = ((pattern || '').match(/:(\w+)/) || [])[1],
       match;
 
     if (name || optional || (rule && rules[rule])) {
 
-      if (pattern.match(/\|/)) {
+      if (pattern.match(/\|/))
         pattern = reLexer.or.apply(null, pattern.split('|'));
-      } else {
-        pattern = pattern.replace(':', '');
-      }
+      else
+        pattern = pattern.replace(':', f);
 
-      match = matchExpression(pattern, name, lazy);
+      match = matchExpression(pattern, name, lazy, precedence);
 
-      if ((match == undefined) && optional) {
+      if ((match == u) && optional) {
         match = '';
       }
 
@@ -66,69 +79,102 @@ reLexer = function(rules, root, defaultActions) {
   },
 
   matchConjunction = function(array, lazy) {
-    array._conj_ || (array._conj_ = 'and');
+    array[c] || (array[c] = 'and');
 
     var
       initialExpression = expression,
-      conjunction = array._conj_,
-      i, pattern, identifier, match, matches = [];
+      conjunction = array[c],
+      i, pattern, match, captures = [];
 
     for (i = 0; i < array.length; i++) {
       pattern = array[i];
-      identifier = expression + ' -> ' + pattern;
+      match = matchExpression(pattern, null, lazy);
 
-      if (busy.indexOf(identifier) == -1) {
-        busy.push(identifier);
-        match = matchExpression(pattern, null, lazy);
-        busy.splice(busy.indexOf(identifier), 1);
-
-        if (match != undefined) {
-          if (conjunction == 'and') {
-            matches.push(match);
-          } else {
-            return match;
-          }
-        } else if (conjunction == 'and') {
-          expression = initialExpression;
-          return;
+      if (match != u) {
+        if (conjunction == 'and') {
+          captures.push(match);
+        } else {
+          return match;
         }
+      } else if (conjunction == 'and') {
+        expression = initialExpression;
+        return;
       }
     }
 
-    if (matches.length)
-      return matches;
+    if (captures.length)
+      return captures;
   },
 
-  matchExpression = function(ruleOrPattern, name, lazy) {
+  matchExpression = function(ruleOrPattern, name, lazy, precedence) {
+    if (expression == u)
+      return;
+
+    ruleOrPattern = ruleOrPattern || (f + root);
+
     var
       initialExpression = expression,
-      isRootMatch = !ruleOrPattern,
-      rule = ruleOrPattern || root,
+      initialPrecedence = p,
+      rule = ((ruleOrPattern + '').indexOf(f) == 0 ? ruleOrPattern.slice(1) : u),
+      isRootMatch = rule == root,
       pattern = rules[rule],
       action = actions && actions[rule],
-      match,
-      parse;
+      identifier, matched, match, parse,
+      e, m, i, r;
+
+    if (p && precedence && p > precedence)
+      return;
 
     if (!pattern) {
-      rule = undefined;
+      rule = u;
       pattern = ruleOrPattern;
+
+    } else {
+      identifier = rule + ': ' + expression;
+
+      if (arguments.length && (matched = matches[identifier])) {
+        expression = matched[0];
+        return matched[1];
+
+      } else if (busy[identifier])
+        return;
+
+      busy[identifier] = !isRootMatch;
     }
 
-    patterns.push(expression + ' (#' + patterns.length + ') ' + pattern.toString());
+    if (precedence)
+      p = precedence;
 
-    switch (pattern.constructor) {
-    case RegExp:
-      match = matchPattern(pattern);
-      break;
-    case String:
-      match = matchString(pattern, lazy);
-      break;
-    case Array:
-      match = matchConjunction(pattern, lazy);
-      break;
+    if (expression.indexOf(dummy) == -1)
+      stacktrace.push(expression + ' (#' + stacktrace.length + ') ' + (rule ? '(rule) ' + rule : pattern).toString());
+
+    if (arguments.length && (matched = matches['>' + identifier])) {
+      expression = matched[0];
+      match = matched[1];
+
+    } else {
+      switch (pattern.constructor) {
+      case RegExp:
+        match = matchPattern(pattern);
+        break;
+      case String:
+        match = matchString(pattern, lazy);
+        break;
+      case Array:
+        match = matchConjunction(pattern, lazy);
+        break;
+      }
     }
 
-    if ((match != undefined) || (initialExpression != expression)) {
+    p = initialPrecedence;
+
+    if (rule)
+      busy[identifier] = false;
+
+    if (!isRootMatch && identifier)
+      addMatch(identifier, expression, match);
+
+    if ((match != u) || (initialExpression != expression)) {
       if (rule || name) {
         if (!env || action)
           match = normalizeMatch(name, lazy, rule, pattern, match);
@@ -142,13 +188,38 @@ reLexer = function(rules, root, defaultActions) {
 
       if (env && name) {
         match = [name, match];
-        match._named_ = true;
+        match[n] = true;
       }
 
-      return match;
+      if (expression != u) {
+        if (!expression.length)
+          expression = u;
 
-    } else if (isRootMatch) {
-      throw 'Unable to match expression: ' + JSON.stringify(expression) + ' (rule: ' + rule + ')';
+        else if (rule && precedence != u && expression && expression.indexOf(dummy) == -1) {
+          e = expression;
+          m = match;
+          i = '>' + root + ': ' + dummy + e;
+
+          expression = dummy + e;
+          matches[i] = [e, match];
+
+          r = matchExpression.apply(this, arguments);
+
+          if (r == u) {
+            expression = e;
+            match = m;
+          } else {
+            match = r;
+          }
+
+          delete matches[i];
+        }
+      }
+
+      if (!isRootMatch && identifier)
+        addMatch(identifier, expression, match);
+
+      return match;
     }
   },
 
@@ -169,13 +240,13 @@ reLexer = function(rules, root, defaultActions) {
 
     specs.pattern = pattern;
 
-    if (pattern._conj_)
-      specs.conjunction = pattern._conj_;
+    if (pattern[c])
+      specs.conjunction = pattern[c];
 
     if (env && (match.constructor == Array)) {
       for (i = 0; i < match.length; i++) {
         capture = match[i];
-        if (capture && capture._named_) {
+        if (capture && capture[n]) {
           object[capture[0]] = capture[1];
         }
       }
@@ -199,13 +270,24 @@ reLexer = function(rules, root, defaultActions) {
     var match, index;
 
     try {
+      p = u;
       match = matchExpression();
-      return expression.length ? scan() : match;
+
+      if (expression != u) {
+        if (retried == expression)
+          throw 'Unable to match expression: ' + JSON.stringify(expression);
+        else {
+          retried = expression;
+          matches['>' + root + ': ' + expression] = [expression, match];
+          return scan();
+        }
+      } else
+        return match;
 
     } catch(e) {
       index = e.message && e.message.match('Maximum call stack size exceeded') ? -30 : -15;
       console.error(e);
-      console.error('Expressions backtrace:\n' + patterns.slice(index).reverse().join('\n'));
+      console.error('Expressions backtrace:\n' + stacktrace.slice(index).reverse().join('\n'));
     }
   },
 
@@ -216,8 +298,10 @@ reLexer = function(rules, root, defaultActions) {
       expression = lexExpression;
       actions = definedActions || defaultActions;
       env = environment;
-      busy ? busy.splice(0) : (busy = []);
-      patterns ? patterns.splice(0) : (patterns = []);
+      busy = {};
+      retried = u;
+      matches = {};
+      stacktrace ? stacktrace.splice(0) : (stacktrace = []);
       return scan();
     }
   };

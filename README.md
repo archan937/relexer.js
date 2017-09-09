@@ -120,10 +120,26 @@ encapsulation: [
 Aside from using a grammar rule expression containing rules delimited with a `|` (pipe), you can also use the `or()` (also defined as `reLexer.or()`) to imply that a rule passes when an expression matches either one of the set of rules.
 
 ```javascript
+logicalOperator: or(
+  '&&',
+  '||'
+),
+```
+
+#### Precedence
+
+The order of matching grammar rules can be very important. Not only is the actual order of the rules with an array decisive, you can also provide the precedence for certain grammar rules.
+
+To do so, just add `/` (slash) followed by a number (the precedence) at the end of a grammar rule expression.
+
+```javascript
 expression: or(
-  ':binaryExpression',
-  ':ternary',
   ':encapsulation',
+  ':ternaryExpression/1',
+  ':logicalExpression/2',
+  ':comparisonExpression/3',
+  ':addSubtractExpression/4',
+  ':multiplyDivideExpression/5',
   ':primitive'
 )
 ```
@@ -211,6 +227,10 @@ path: function(env, path) {
   return value;
 },
 ```
+
+## Testing reLexer.js with QUnit
+
+The `reLexer.js` library is tested with [QUnit](http://qunitjs.com). Check out the test results at [https://archan937.github.io/relexer.js/test](https://archan937.github.io/relexer.js/test).
 
 ### Why not give reLexer.js a try?
 

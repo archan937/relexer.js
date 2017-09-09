@@ -5,6 +5,7 @@
     <title>reLexer.js</title>
     <link rel="stylesheet" href="./demo.css">
     <script src="../src/relexer.js"></script>
+    <script src="./lexer.js"></script>
     <script src="./demo.js"></script>
   </head>
   <body>
@@ -118,16 +119,6 @@
         </script>
       </div>
       <h4>
-        > Calculations
-      </h4>
-      <div class="examples">
-        <script>
-          demonstrate('19 + 82');
-          demonstrate('(1 + 2) * 3');
-          demonstrate('1 + (2 * 3)');
-        </script>
-      </div>
-      <h4>
         > Strings
       </h4>
       <div class="examples">
@@ -164,15 +155,33 @@
         </script>
       </div>
       <h4>
+        > Calculations
+      </h4>
+      <div class="examples">
+        <script>
+          demonstrate('19 + 82');
+          demonstrate('2 + 3 + 4');
+          demonstrate('(1 + 2) * 3');
+          demonstrate('1 + (2 * 3)');
+          demonstrate('1 + 2 * 3');
+          demonstrate('2 * 3 + 1');
+          demonstrate('1 + 2 * 3 + 1');
+          demonstrate('2 * 3 + 1 + 4');
+          demonstrate('(1 + 2 * 3)');
+          demonstrate('1 + (1 - 2) + 3');
+        </script>
+      </div>
+      <h4>
         > Ternary statements
       </h4>
       <div class="examples">
         <script>
+          demonstrate('1 < 2 ? "Yes" : "No"');
           demonstrate('1 > 2 ? "Yes" : "No"');
-          demonstrate('(count >= 5) ? "Limit exceeded" : "You have " + (5 - count) + " credits left"', {
+          demonstrate('count >= 5 ? "Limit exceeded" : "You have " + (5 - count) + " credits left"', {
             count: 3
           });
-          demonstrate('(count >= 5) ? "Limit exceeded" : "You have " + (5 - count) + " credits left"', {
+          demonstrate('count >= 5 ? "Limit exceeded" : "You have " + (5 - count) + " credits left"', {
             count: 5
           });
         </script>

@@ -167,8 +167,6 @@ pre, code.limited {
   margin: 0 -2px;
   width: calc(100% - 6px);
   padding: 0 5px 2px 5px;
-  color: #C7254E;
-  background: #F9F2F4;
   border-radius: 4px;
 }
 
@@ -178,6 +176,16 @@ pre, code.limited {
   padding-left: 6px;
   display: block;
   font-weight: normal;
+}
+
+.examples strong.green {
+  color: #39893B;
+  background: #EFF7EB;
+}
+
+.examples strong.red {
+  color: #C7254E;
+  background: #F9F2F4;
 }
 
 a {
