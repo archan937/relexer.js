@@ -176,9 +176,9 @@ reLexer = function(rules, root, defaultActions) {
 
     if ((match != u) || (initialExpression != expression)) {
       if (rule || name) {
-        if (!env || action)
+        if (!actions || action)
           match = normalizeMatch(name, lazy, rule, pattern, match);
-        if (env && action) {
+        if (actions && action) {
           parse = function() {
             return action(env, this.captures, this);
           }.bind(match);
@@ -186,7 +186,7 @@ reLexer = function(rules, root, defaultActions) {
         }
       }
 
-      if (env && name) {
+      if (actions && name) {
         match = [name, match];
         match[n] = true;
       }
@@ -243,7 +243,7 @@ reLexer = function(rules, root, defaultActions) {
     if (pattern[c])
       specs.conjunction = pattern[c];
 
-    if (env && (match.constructor == Array)) {
+    if (actions && (match.constructor == Array)) {
       for (i = 0; i < match.length; i++) {
         capture = match[i];
         if (capture && capture[n]) {
@@ -291,13 +291,13 @@ reLexer = function(rules, root, defaultActions) {
     }
   },
 
-  lex = function(lexExpression, definedActions, environment) {
+  lex = function(lexExpression, environment, definedActions) {
     lexExpression = lexExpression.trim();
 
     if (lexExpression) {
       expression = lexExpression;
-      actions = definedActions || defaultActions;
       env = environment;
+      actions = (arguments.length == 1) ? u : (definedActions || defaultActions);
       busy = {};
       retried = u;
       matches = {};
@@ -311,7 +311,7 @@ reLexer = function(rules, root, defaultActions) {
   };
 
   this.parse = function(expression, env, actions) {
-    return lex(expression, actions, env || {});
+    return lex(expression, env, actions);
   };
 
 };
