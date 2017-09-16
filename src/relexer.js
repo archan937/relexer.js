@@ -118,7 +118,7 @@ reLexer = function(rules, root, defaultActions) {
       rule = ((ruleOrPattern + '').indexOf(f) == 0 ? ruleOrPattern.slice(1) : u),
       isRootMatch = rule == root,
       pattern = rules[rule],
-      action = actions && actions[rule],
+      action = (actions && rule) ? (actions[rule] || actions['*']) : u,
       identifier, matched, match, parse,
       e, m, i, r;
 
