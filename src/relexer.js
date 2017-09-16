@@ -302,7 +302,9 @@ reLexer = function(rules, root, defaultActions) {
       retried = u;
       matches = {};
       stacktrace ? stacktrace.splice(0) : (stacktrace = []);
-      return scan();
+
+      var result = scan();
+      return typeof(result) == 'function' ? result() : result;
     }
   };
 

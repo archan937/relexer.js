@@ -186,6 +186,17 @@
           });
         </script>
       </div>
+      <h4>
+        > Conditional statements
+      </h4>
+      <div class="examples">
+        <script>
+          demonstrate('"Hello!" if 1 > 2', {}, undefined);
+          demonstrate('"Hello!" if 1 < 2', {}, "Hello!");
+          demonstrate('"Hello!" unless 1 > 2', {}, "Hello!");
+          demonstrate('"Hello!" unless 1 < 2', {}, undefined);
+        </script>
+      </div>
     </div>
     <script>
       var

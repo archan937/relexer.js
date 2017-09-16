@@ -21,8 +21,9 @@ function correctJSON(json) {
   }
 }
 
-function demonstrate(expression, env) {
+function demonstrate(expression, env, expected) {
   var
+    evaluate = arguments.length < 3,
     parsed,
     result = JSON.stringify(parsed = lexer.parse(expression, env)),
     parse_tree = correctJSON(JSON.stringify(lexer.tokenize(expression), null, 2)),
@@ -31,11 +32,11 @@ function demonstrate(expression, env) {
         eval('var ' + key + ' = env.' + key);
       }
       return (function() {
-        var value;
         try {
-          value = eval(expression);
+          if (evaluate)
+            expected = eval(expression);
         } catch(e) {}
-        return value == parsed;
+        return expected == parsed;
       })();
     })(env);
 

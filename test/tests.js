@@ -1,8 +1,8 @@
 var test = function(desc, func) {
   var assertions = [];
 
-  func(function(expression, env) {
-    var
+  func(function(expression, env, expected) {
+    if (arguments.length < 3) {
       expected = (function() {
         for (var key in env) {
           eval('var ' + key + ' = env.' + key);
@@ -15,6 +15,7 @@ var test = function(desc, func) {
           return value;
         })();
       })(env);
+    }
     assertions.push({
       desc: 'lexer.parse(' + JSON.stringify(expression) + (env ? ', ' + JSON.stringify(env).replace(/":/g, '": ') : '') + ')',
       expression: expression,
@@ -92,4 +93,11 @@ test('ternary statement', function(assert) {
   assert('count >= 5 ? "Limit exceeded" : "You have " + (5 - count) + " credits left"', {
     count: 5
   });
+});
+
+test('conditional statement', function(assert) {
+  assert('"Hello!" if 1 > 2', {}, undefined);
+  assert('"Hello!" if 1 < 2', {}, "Hello!");
+  assert('"Hello!" unless 1 > 2', {}, "Hello!");
+  assert('"Hello!" unless 1 < 2', {}, undefined);
 });
